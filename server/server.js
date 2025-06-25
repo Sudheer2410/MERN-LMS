@@ -14,12 +14,13 @@ const studentCourseProgressRoutes = require("./routes/student-routes/course-prog
 const app = express();
 const PORT = config.PORT;
 
-// More flexible CORS configuration for development
+// More flexible CORS configuration for development and production
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174", 
   "http://localhost:3000",
-  "http://localhost:3001"
+  "http://localhost:3001",
+  config.CLIENT_URL // This will include your production frontend URL
 ];
 
 app.use(
