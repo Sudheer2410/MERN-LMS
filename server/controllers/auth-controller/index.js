@@ -4,33 +4,68 @@ const jwt = require("jsonwebtoken");
 const config = require("../../config");
 
 const registerUser = async (req, res) => {
-  const { userName, userEmail, password, role } = req.body;
+  try {
+    const { userName, userEmail, password, role } = req.body;
 
-  const existingUser = await User.findOne({
-    $or: [{ userEmail }, { userName }],
-  });
+    // Validate required fields
+    if (!userName || !userEmail || !password || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required: userName, userEmail, password, role",
+      });
+    }
 
-  if (existingUser) {
-    return res.status(400).json({
+    // Validate role
+    if (!["student", "instructor"].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Role must be either 'student' or 'instructor'",
+      });
+    }
+
+    const existingUser = await User.findOne({
+      $or: [{ userEmail }, { userName }],
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User name or user email already exists",
+      });
+    }
+
+    const hashPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      userName,
+      userEmail,
+      role,
+      password: hashPassword,
+    });
+
+    await newUser.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully!",
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    
+    // Handle mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: validationErrors
+      });
+    }
+
+    return res.status(500).json({
       success: false,
-      message: "User name or user email already exists",
+      message: "Internal server error during registration",
     });
   }
-
-  const hashPassword = await bcrypt.hash(password, 10);
-  const newUser = new User({
-    userName,
-    userEmail,
-    role,
-    password: hashPassword,
-  });
-
-  await newUser.save();
-
-  return res.status(201).json({
-    success: true,
-    message: "User registered successfully!",
-  });
 };
 
 const loginUser = async (req, res) => {
