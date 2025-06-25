@@ -20,7 +20,8 @@ const allowedOrigins = [
   "http://localhost:5174", 
   "http://localhost:3000",
   "http://localhost:3001",
-  config.CLIENT_URL // This will include your production frontend URL
+  config.CLIENT_URL, // This will include your production frontend URL
+  "https://mern-lms-frontend-v9bc.onrender.com" // Add your specific frontend URL
 ];
 
 app.use(
@@ -32,16 +33,28 @@ app.use(
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
+        console.log('CORS blocked origin:', origin);
         callback(new Error('Not allowed by CORS'));
       }
     },
-    methods: ["GET", "POST", "DELETE", "PUT"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     credentials: true,
   })
 );
 
 app.use(express.json());
+
+// Health check route
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "LMS Backend is running!", 
+    timestamp: new Date().toISOString(),
+    cors: {
+      allowedOrigins: allowedOrigins
+    }
+  });
+});
 
 //database connection
 mongoose
