@@ -1,7 +1,34 @@
 import axios from "axios";
 
+// Get the API URL from environment or use a fallback
+const getApiUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  console.log("Environment VITE_API_URL:", envUrl);
+  
+  if (envUrl) {
+    console.log("Using environment URL:", envUrl);
+    return envUrl;
+  }
+  
+  // Check if we're in production (onrender.com)
+  if (window.location.hostname.includes('onrender.com')) {
+    const productionUrl = 'https://mern-lms-213f.onrender.com';
+    console.log("Using production URL:", productionUrl);
+    return productionUrl;
+  }
+  
+  // Local development
+  const localUrl = "http://localhost:5000";
+  console.log("Using local URL:", localUrl);
+  return localUrl;
+};
+
+const apiUrl = getApiUrl();
+console.log("Final API URL:", apiUrl);
+
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
+  baseURL: apiUrl,
+  timeout: 10000, // 10 second timeout
 });
 
 axiosInstance.interceptors.request.use(

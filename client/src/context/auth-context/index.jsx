@@ -42,41 +42,61 @@ export default function AuthProvider({ children }) {
     }
   }
 
-  //check auth user
-
+  //check auth user with timeout
   async function checkAuthUser() {
+    // Set a timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Auth check timeout')), 5000); // 5 second timeout
+    });
+
     try {
-      const data = await checkAuthService();
+      const dataPromise = checkAuthService();
+      const data = await Promise.race([dataPromise, timeoutPromise]);
+      
       if (data.success) {
         setAuth({
           authenticate: true,
           user: data.data.user,
         });
-        setLoading(false);
       } else {
         setAuth({
           authenticate: false,
           user: null,
         });
-        setLoading(false);
       }
     } catch (error) {
-      // Handle 401 errors silently as they're expected when user is not logged in
+      // Handle different types of errors
       if (error?.response?.status === 401) {
+        // 401 is expected when user is not logged in
         setAuth({
           authenticate: false,
           user: null,
         });
-        setLoading(false);
+      } else if (error?.code === 'ECONNABORTED' || error?.message?.includes('timeout')) {
+        // Connection timeout - set auth to false but don't show error
+        console.warn("Connection timeout during auth check");
+        setAuth({
+          authenticate: false,
+          user: null,
+        });
+      } else if (error?.response?.status >= 500) {
+        // Server error - set auth to false but don't show error
+        console.warn("Server error during auth check:", error.response?.status);
+        setAuth({
+          authenticate: false,
+          user: null,
+        });
       } else {
-        // Log other errors for debugging
+        // Log other errors for debugging but don't break the app
         console.error("Auth check error:", error);
         setAuth({
           authenticate: false,
           user: null,
         });
-        setLoading(false);
       }
+    } finally {
+      // Always set loading to false
+      setLoading(false);
     }
   }
 

@@ -130,8 +130,4 @@ FormControls.propTypes = {
   setFormData: PropTypes.func.isRequired,
 };
 
-FormControls.defaultProps = {
-  formControls: [],
-};
-
 export default FormControls;

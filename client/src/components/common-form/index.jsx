@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 
 function CommonForm({
   handleSubmit,
-  buttonText,
+  buttonText = "Submit",
   formControls = [],
   formData,
   setFormData,
@@ -19,7 +19,7 @@ function CommonForm({
         setFormData={setFormData}
       />
       <Button disabled={isButtonDisabled} type="submit" className="mt-5 w-full">
-        {buttonText || "Submit"}
+        {buttonText}
       </Button>
     </form>
   );
@@ -32,12 +32,6 @@ CommonForm.propTypes = {
   formData: PropTypes.object,
   setFormData: PropTypes.func.isRequired,
   isButtonDisabled: PropTypes.bool,
-};
-
-CommonForm.defaultProps = {
-  buttonText: "Submit",
-  formControls: [],
-  isButtonDisabled: false,
 };
 
 export default CommonForm;

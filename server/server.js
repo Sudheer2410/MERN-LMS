@@ -21,7 +21,9 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
   config.CLIENT_URL, // This will include your production frontend URL
-  "https://mern-lms-frontend-v9bc.onrender.com" // Add your specific frontend URL
+  "https://mern-lms-frontend-v9bc.onrender.com", // Add your specific frontend URL
+  "https://mern-lms-213f.onrender.com", // Add your current frontend URL
+  "https://*.onrender.com" // Allow all onrender.com subdomains
 ];
 
 app.use(
@@ -30,7 +32,8 @@ app.use(
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
       
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      // Check if origin is in allowed list or is an onrender.com subdomain
+      if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('onrender.com')) {
         callback(null, true);
       } else {
         console.log('CORS blocked origin:', origin);
