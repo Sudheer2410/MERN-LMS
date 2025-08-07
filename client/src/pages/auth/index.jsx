@@ -83,7 +83,7 @@ function AuthPage() {
               </p>
             </div>
             
-            <div className="grid grid-cols-3 gap-4 pt-8">
+            {/* <div className="grid grid-cols-3 gap-4 pt-8">
               <div className="text-center">
                 <div className="text-2xl font-bold text-white">1000+</div>
                 <div className="text-sm text-blue-200">Active Learners</div>
@@ -96,7 +96,7 @@ function AuthPage() {
                 <div className="text-2xl font-bold text-white">50+</div>
                 <div className="text-sm text-blue-200">Instructors</div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
