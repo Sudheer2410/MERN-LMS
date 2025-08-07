@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  courseLandingPageFormControls,
   courseCurriculumInitialFormData,
   courseLandingInitialFormData,
 } from "@/config";

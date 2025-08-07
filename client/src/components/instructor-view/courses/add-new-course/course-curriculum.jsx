@@ -269,14 +269,45 @@ function CourseCurriculum() {
                     </Button>
                   </div>
                 ) : (
-                  <Input
-                    type="file"
-                    accept="video/*"
-                    onChange={(event) =>
-                      handleSingleLectureUpload(event, index)
-                    }
-                    className="mb-4"
-                  />
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium">Upload Video File</Label>
+                      <Input
+                        type="file"
+                        accept="video/*"
+                        onChange={(event) =>
+                          handleSingleLectureUpload(event, index)
+                        }
+                        className="mb-2"
+                      />
+                      <p className="text-xs text-gray-500">Supported: MP4, MOV, AVI, WebM, MKV</p>
+                    </div>
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-gray-500">Or</span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">YouTube URL</Label>
+                      <Input
+                        type="url"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        onChange={(event) => {
+                          let cpyCourseCurriculumFormData = [...courseCurriculumFormData];
+                          cpyCourseCurriculumFormData[index] = {
+                            ...cpyCourseCurriculumFormData[index],
+                            videoUrl: event.target.value,
+                          };
+                          setCourseCurriculumFormData(cpyCourseCurriculumFormData);
+                        }}
+                        className="mb-2"
+                      />
+                      <p className="text-xs text-gray-500">Paste YouTube watch URL or embed URL</p>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

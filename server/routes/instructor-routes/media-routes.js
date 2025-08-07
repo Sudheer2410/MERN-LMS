@@ -11,15 +11,38 @@ const upload = multer({ dest: "uploads/" });
 
 router.post("/upload", upload.single("file"), async (req, res) => {
   try {
+    // Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "No file uploaded" 
+      });
+    }
+
     const result = await uploadMediaToCloudinary(req.file.path);
+    
     res.status(200).json({
       success: true,
       data: result,
     });
   } catch (e) {
-    console.log(e);
+    // Provide more specific error messages
+    let errorMessage = "Error uploading file";
+    if (e.message.includes("Cloudinary is not configured")) {
+      errorMessage = "File upload service is not configured. Please contact administrator.";
+    } else if (e.message.includes("Invalid API credentials")) {
+      errorMessage = "File upload service configuration error. Please contact administrator.";
+    } else if (e.message.includes("File too large")) {
+      errorMessage = "File is too large. Please upload a smaller file.";
+    } else if (e.message.includes("ENOENT")) {
+      errorMessage = "File not found. Please try uploading again.";
+    }
 
-    res.status(500).json({ success: false, message: "Error uploading file" });
+    res.status(500).json({ 
+      success: false, 
+      message: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? e.message : undefined
+    });
   }
 });
 

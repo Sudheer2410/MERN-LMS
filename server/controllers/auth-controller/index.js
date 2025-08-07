@@ -5,7 +5,7 @@ const config = require("../../config");
 
 const registerUser = async (req, res) => {
   try {
-    const { userName, userEmail, password, role } = req.body;
+  const { userName, userEmail, password, role } = req.body;
 
     // Validate required fields
     if (!userName || !userEmail || !password || !role) {
@@ -23,31 +23,31 @@ const registerUser = async (req, res) => {
       });
     }
 
-    const existingUser = await User.findOne({
-      $or: [{ userEmail }, { userName }],
+  const existingUser = await User.findOne({
+    $or: [{ userEmail }, { userName }],
+  });
+
+  if (existingUser) {
+    return res.status(400).json({
+      success: false,
+      message: "User name or user email already exists",
     });
+  }
 
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User name or user email already exists",
-      });
-    }
+  const hashPassword = await bcrypt.hash(password, 10);
+  const newUser = new User({
+    userName,
+    userEmail,
+    role,
+    password: hashPassword,
+  });
 
-    const hashPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({
-      userName,
-      userEmail,
-      role,
-      password: hashPassword,
-    });
+  await newUser.save();
 
-    await newUser.save();
-
-    return res.status(201).json({
-      success: true,
-      message: "User registered successfully!",
-    });
+  return res.status(201).json({
+    success: true,
+    message: "User registered successfully!",
+  });
   } catch (error) {
     console.error("Registration error:", error);
     

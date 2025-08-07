@@ -38,6 +38,11 @@ function convertYouTubeUrl(url) {
     return `https://www.youtube.com/watch?v=${cleanVideoId}`;
   }
   
+  // If it's already a watch URL, return as is
+  if (url.includes('youtube.com/watch?v=')) {
+    return url;
+  }
+  
   return url;
 }
 
@@ -164,7 +169,7 @@ function VideoPlayer({
           break;
         case 101:
         case 150:
-          errorMessage = "This YouTube video cannot be played in embedded players. The video owner has disabled embedding.";
+          errorMessage = "This YouTube video cannot be played in embedded players. The video owner has disabled embedding. Please try a different video or contact the instructor.";
           break;
         default:
           errorMessage = `YouTube error ${error.code}: ${error.message || 'Unknown error'}`;
@@ -380,6 +385,10 @@ function VideoPlayer({
               showinfo: 0,
               enablejsapi: 1,
               allowfullscreen: 1,
+              // Add these to help with embedding issues
+              fs: 1,
+              iv_load_policy: 3,
+              cc_load_policy: 0,
             },
             embedOptions: {
               host: 'https://www.youtube-nocookie.com'

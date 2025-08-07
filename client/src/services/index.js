@@ -1,4 +1,5 @@
 import axiosInstance from "@/api/axiosInstance";
+import axios from "axios";
 
 export async function registerService(formData) {
   const { data } = await axiosInstance.post("/auth/register", formData);
@@ -19,7 +20,19 @@ export async function checkAuthService() {
 }
 
 export async function mediaUploadService(formData, onProgressCallback) {
-  const { data } = await axiosInstance.post("/media/upload", formData, {
+  // Create a new axios instance without the default Content-Type header for file uploads
+  const uploadAxios = axios.create({
+    baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
+    timeout: 10000,
+  });
+
+  // Add auth token if available
+  const token = localStorage.getItem("token");
+  if (token) {
+    uploadAxios.defaults.headers.Authorization = `Bearer ${token}`;
+  }
+
+  const { data } = await uploadAxios.post("/media/upload", formData, {
     onUploadProgress: (progressEvent) => {
       const percentCompleted = Math.round(
         (progressEvent.loaded * 100) / progressEvent.total

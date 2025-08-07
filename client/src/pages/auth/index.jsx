@@ -1,4 +1,4 @@
-import CommonForm from "@/components/common-form";
+import CommonForm from "@/components/common-form/CommonForm";
 import {
   Card,
   CardContent,
@@ -22,10 +22,13 @@ function AuthPage() {
     setSignUpFormData,
     handleRegisterUser,
     handleLoginUser,
+    authError,
+    setAuthError,
   } = useContext(AuthContext);
 
   function handleTabChange(value) {
     setActiveTab(value);
+    setAuthError(""); // Clear error when switching tabs
   }
 
   function checkIfSignInFormIsValid() {
@@ -76,6 +79,11 @@ function AuthPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
+                {authError && (
+                  <div className="mb-4 text-red-600 text-center font-semibold">
+                    {authError}
+                  </div>
+                )}
                 <CommonForm
                   formControls={signInFormControls}
                   buttonText={"Sign In"}
@@ -96,6 +104,11 @@ function AuthPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
+                {authError && (
+                  <div className="mb-4 text-red-600 text-center font-semibold">
+                    {authError}
+                  </div>
+                )}
                 <CommonForm
                   formControls={signUpFormControls}
                   buttonText={"Sign Up"}

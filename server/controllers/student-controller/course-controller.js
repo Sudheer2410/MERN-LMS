@@ -8,13 +8,12 @@ const getAllStudentViewCourses = async (req, res) => {
       level,
       primaryLanguage,
       sortBy = "price-lowtohigh",
+      page = 1,
+      limit = 12
     } = req.query;
 
-    console.log(req.query, "req.query");
-
-    let filters = {};
+    let filters = { isPublised: true };
     
-    // Only add filters if the parameters exist and are not empty
     if (category && category.length > 0) {
       filters.category = { $in: category.split(",") };
     }
@@ -44,17 +43,37 @@ const getAllStudentViewCourses = async (req, res) => {
         break;
     }
 
-    const coursesList = await Course.find(filters).sort(sortParam);
+    // Simple pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const [coursesList, totalCount] = await Promise.all([
+      Course.find(filters)
+        .select('title instructorName category level primaryLanguage subtitle image pricing students date')
+        .sort(sortParam)
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(), // Use lean() for better performance
+      Course.countDocuments(filters)
+    ]);
+
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
 
     res.status(200).json({
       success: true,
       data: coursesList,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalCount,
+        hasNextPage: parseInt(page) < totalPages,
+        hasPrevPage: parseInt(page) > 1
+      }
     });
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.error('Error in getAllStudentViewCourses:', error);
     res.status(500).json({
       success: false,
-      message: "Some error occured!",
+      message: "Internal server error"
     });
   }
 };
@@ -62,12 +81,12 @@ const getAllStudentViewCourses = async (req, res) => {
 const getStudentViewCourseDetails = async (req, res) => {
   try {
     const { id } = req.params;
-    const courseDetails = await Course.findById(id);
+    const courseDetails = await Course.findById(id).lean();
 
     if (!courseDetails) {
       return res.status(404).json({
         success: false,
-        message: "No course details found",
+        message: "Course not found",
         data: null,
       });
     }
@@ -76,11 +95,11 @@ const getStudentViewCourseDetails = async (req, res) => {
       success: true,
       data: courseDetails,
     });
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.error('Error in getStudentViewCourseDetails:', error);
     res.status(500).json({
       success: false,
-      message: "Some error occured!",
+      message: "Internal server error"
     });
   }
 };
@@ -88,11 +107,10 @@ const getStudentViewCourseDetails = async (req, res) => {
 const checkCoursePurchaseInfo = async (req, res) => {
   try {
     const { id, studentId } = req.params;
-    const studentCourses = await StudentCourses.findOne({
-      userId: studentId,
-    });
+    const studentCourses = await StudentCourses.findOne({ userId: studentId })
+      .select('courses')
+      .lean();
 
-    // Check if studentCourses exists, if not return false (student hasn't bought any courses)
     const ifStudentAlreadyBoughtCurrentCourse = studentCourses 
       ? studentCourses.courses.findIndex((item) => item.courseId === id) > -1
       : false;
@@ -101,11 +119,11 @@ const checkCoursePurchaseInfo = async (req, res) => {
       success: true,
       data: ifStudentAlreadyBoughtCurrentCourse,
     });
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.error('Error in checkCoursePurchaseInfo:', error);
     res.status(500).json({
       success: false,
-      message: "Some error occured!",
+      message: "Internal server error"
     });
   }
 };

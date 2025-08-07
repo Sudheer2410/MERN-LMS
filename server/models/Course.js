@@ -31,6 +31,13 @@ const CourseSchema = new mongoose.Schema({
   ],
   curriculum: [LectureSchema],
   isPublised: Boolean,
+}, {
+  timestamps: true
 });
+
+// Simple indexes for common queries
+CourseSchema.index({ isPublised: 1 });
+CourseSchema.index({ category: 1, level: 1 });
+CourseSchema.index({ pricing: 1 });
 
 module.exports = mongoose.model("Course", CourseSchema);

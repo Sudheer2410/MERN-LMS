@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  courseLandingPageFormControls,
   courseCurriculumInitialFormData,
   courseLandingInitialFormData,
 } from "@/config";
@@ -32,7 +33,7 @@ function AddNewCoursePage() {
   const navigate = useNavigate();
   const params = useParams();
 
-  console.log(params);
+
 
   function isEmpty(value) {
     if (Array.isArray(value)) {
@@ -43,10 +44,26 @@ function AddNewCoursePage() {
   }
 
   function validateFormData() {
-    for (const key in courseLandingFormData) {
-      if (isEmpty(courseLandingFormData[key])) {
+    // Check required course landing page fields (excluding image which is in settings)
+    const requiredLandingFields = [
+      'title', 'category', 'level', 'primaryLanguage', 
+      'subtitle', 'description', 'pricing', 'objectives', 'welcomeMessage'
+    ];
+    
+    // Also check if primaryLanguage is not just the label text
+    if (courseLandingFormData.primaryLanguage === 'Primary Language') {
+      return false;
+    }
+    
+    for (const field of requiredLandingFields) {
+      if (isEmpty(courseLandingFormData[field])) {
         return false;
       }
+    }
+
+    // Check if at least one curriculum item exists
+    if (courseCurriculumFormData.length === 0) {
+      return false;
     }
 
     let hasFreePreview = false;
@@ -54,8 +71,7 @@ function AddNewCoursePage() {
     for (const item of courseCurriculumFormData) {
       if (
         isEmpty(item.title) ||
-        isEmpty(item.videoUrl) ||
-        isEmpty(item.public_id)
+        isEmpty(item.videoUrl)
       ) {
         return false;
       }
@@ -65,17 +81,28 @@ function AddNewCoursePage() {
       }
     }
 
-    return hasFreePreview;
+    if (!hasFreePreview) {
+      return false;
+    }
+
+    return true;
   }
 
   async function handleCreateCourse() {
+    // Process curriculum to handle YouTube URLs properly
+    const processedCurriculum = courseCurriculumFormData.map(item => ({
+      ...item,
+      // For YouTube URLs, we don't need public_id
+      public_id: item.public_id || (item.videoUrl.includes('youtube') ? 'youtube' : '')
+    }));
+
     const courseFinalFormData = {
       instructorId: auth?.user?._id,
       instructorName: auth?.user?.userName,
       date: new Date(),
       ...courseLandingFormData,
       students: [],
-      curriculum: courseCurriculumFormData,
+      curriculum: processedCurriculum,
       isPublised: true,
     };
 
@@ -94,7 +121,7 @@ function AddNewCoursePage() {
       setCurrentEditedCourseId(null);
     }
 
-    console.log(courseFinalFormData, "courseFinalFormData");
+
   }
 
   async function fetchCurrentCourseDetails() {
@@ -111,12 +138,9 @@ function AddNewCoursePage() {
         return acc;
       }, {});
 
-      console.log(setCourseFormData, response?.data, "setCourseFormData");
       setCourseLandingFormData(setCourseFormData);
       setCourseCurriculumFormData(response?.data?.curriculum);
     }
-
-    console.log(response, "response");
   }
 
   useEffect(() => {
@@ -127,19 +151,27 @@ function AddNewCoursePage() {
     if (params?.courseId) setCurrentEditedCourseId(params?.courseId);
   }, [params?.courseId]);
 
-  console.log(params, currentEditedCourseId, "params");
+
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center">
         <h1 className="text-3xl font-extrabold mb-5">Create a new course</h1>
-        <Button
-          disabled={!validateFormData()}
-          className="text-sm tracking-wider font-bold px-8"
-          onClick={handleCreateCourse}
-        >
-          SUBMIT
-        </Button>
+        <div className="flex items-center gap-4">
+          {!validateFormData() && (
+            <div className="text-sm text-orange-600 bg-orange-100 px-3 py-1 rounded">
+              ⚠️ Complete all required fields to enable submission
+            </div>
+          )}
+          <Button
+            disabled={!validateFormData()}
+            className="text-sm tracking-wider font-bold px-8"
+            onClick={handleCreateCourse}
+          >
+            {currentEditedCourseId ? "UPDATE COURSE" : "PUBLISH COURSE"}
+          </Button>
+        </div>
+
       </div>
       <Card>
         <CardContent>

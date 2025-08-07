@@ -1,63 +1,68 @@
 import axios from "axios";
 
-// Get the API URL from environment or use a fallback
-const getApiUrl = () => {
-  const envUrl = import.meta.env.VITE_API_URL;
-  console.log("Environment VITE_API_URL:", envUrl);
-  
-  if (envUrl) {
-    console.log("Using environment URL:", envUrl);
-    return envUrl;
-  }
-  
-  // Check if we're in production (onrender.com)
-  if (window.location.hostname.includes('onrender.com')) {
-    const productionUrl = 'https://mern-lms-213f.onrender.com';
-    console.log("Using production URL:", productionUrl);
-    return productionUrl;
-  }
-  
-  // Local development
-  const localUrl = "http://localhost:5000";
-  console.log("Using local URL:", localUrl);
-  return localUrl;
-};
-
-const apiUrl = getApiUrl();
-console.log("Final API URL:", apiUrl);
-
 const axiosInstance = axios.create({
-  baseURL: apiUrl,
-  timeout: 10000, // 10 second timeout
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
+// Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    try {
-      const accessToken = JSON.parse(sessionStorage.getItem("accessToken")) || "";
-
-      if (accessToken && typeof accessToken === "string") {
-        config.headers.Authorization = `Bearer ${accessToken}`;
-      }
-    } catch (error) {
-      // If there's an error parsing the token, remove it from sessionStorage
-      console.warn("Invalid token in sessionStorage, removing it");
-      sessionStorage.removeItem("accessToken");
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-
     return config;
   },
-  (err) => Promise.reject(err)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
-// Add response interceptor to handle 401 errors
+// Response interceptor
 axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Remove invalid token from sessionStorage
-      sessionStorage.removeItem("accessToken");
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // Handle 401 errors
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (refreshToken) {
+          const response = await axios.post(
+            `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/auth/refresh`,
+            { refreshToken }
+          );
+          
+          if (response.data.success) {
+            localStorage.setItem("token", response.data.token);
+            originalRequest.headers.Authorization = `Bearer ${response.data.token}`;
+            return axiosInstance(originalRequest);
+          }
+        }
+      } catch (refreshError) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/auth";
+        return Promise.reject(refreshError);
+      }
     }
+    
+    // Handle network errors with retry
+    if (!error.response && !originalRequest._retry) {
+      originalRequest._retry = true;
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return axiosInstance(originalRequest);
+    }
+    
     return Promise.reject(error);
   }
 );

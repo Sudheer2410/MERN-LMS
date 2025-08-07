@@ -16,7 +16,6 @@ function StudentHomePage() {
   const navigate = useNavigate();
 
   function handleNavigateToCoursesPage(getCurrentId) {
-    console.log(getCurrentId);
     sessionStorage.removeItem("filters");
     const currentFilter = {
       category: [getCurrentId],
@@ -29,21 +28,14 @@ function StudentHomePage() {
 
   async function fetchAllStudentViewCourses() {
     try {
-      console.log("🔍 Fetching courses for home page...");
-      
       const response = await fetchStudentViewCourseListService();
-      
-      console.log("📡 Home page API Response:", response);
       
       if (response?.success) {
         setStudentViewCoursesList(response?.data);
-        console.log("✅ Home page courses loaded:", response?.data?.length);
       } else {
-        console.error("❌ Failed to fetch home page courses:", response);
         setStudentViewCoursesList([]);
       }
     } catch (error) {
-      console.error("❌ Error fetching home page courses:", error);
       setStudentViewCoursesList([]);
     }
   }
@@ -107,14 +99,30 @@ function StudentHomePage() {
             studentViewCoursesList.map((courseItem) => (
               <div
                 onClick={() => handleCourseNavigate(courseItem?._id)}
-                className="border rounded-lg overflow-hidden shadow cursor-pointer"
+                className="border rounded-lg overflow-hidden shadow cursor-pointer hover:shadow-lg transition-shadow"
               >
-                <img
-                  src={courseItem?.image}
-                  width={300}
-                  height={150}
-                  className="w-full h-40 object-cover"
-                />
+                <div className="relative">
+                  {courseItem?.image ? (
+                    <img
+                      src={courseItem?.image}
+                      width={300}
+                      height={150}
+                      className="w-full h-40 object-cover"
+                      alt={courseItem?.title}
+                      onError={(e) => {
+                        console.log("❌ Image failed to load:", courseItem?.image);
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className={`w-full h-40 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg ${courseItem?.image ? 'hidden' : 'flex'}`}
+                    style={{ display: courseItem?.image ? 'none' : 'flex' }}
+                  >
+                    {courseItem?.title?.charAt(0) || 'C'}
+                  </div>
+                </div>
                 <div className="p-4">
                   <h3 className="font-bold mb-2">{courseItem?.title}</h3>
                   <p className="text-sm text-gray-700 mb-2">

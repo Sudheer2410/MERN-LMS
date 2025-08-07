@@ -1,4 +1,5 @@
 import MediaProgressbar from "@/components/media-progress-bar";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,7 +38,10 @@ function CourseSettings() {
           setMediaUploadProgress(false);
         }
       } catch (e) {
-        console.log(e);
+        setMediaUploadProgress(false);
+        
+        const errorMessage = e.response?.data?.message || "Failed to upload image. Please try again.";
+        alert(`Upload Error: ${errorMessage}`);
       }
     }
   }
@@ -66,6 +70,23 @@ function CourseSettings() {
               type="file"
               accept="image/*"
             />
+            <div className="mt-2 p-2 bg-blue-50 rounded">
+              <p className="text-xs text-blue-600 mb-2">💡 Having trouble uploading? Try:</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setCourseLandingFormData({
+                    ...courseLandingFormData,
+                    image: "https://via.placeholder.com/400x200/3B82F6/FFFFFF?text=Course+Thumbnail"
+                  });
+                }}
+                className="text-xs"
+              >
+                Use Placeholder Image
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
