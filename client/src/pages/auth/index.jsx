@@ -2,9 +2,9 @@ import CommonForm from "@/components/common-form/CommonForm";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+  // CardDescription,
+  // CardHeader,
+  // CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { signInFormControls, signUpFormControls } from "@/config";
@@ -29,6 +29,11 @@ function AuthPage() {
   function handleTabChange(value) {
     setActiveTab(value);
     setAuthError(""); // Clear error when switching tabs
+  }
+
+  function handleSuccessfulRegistration() {
+    setActiveTab("signin");
+    setAuthError(""); // Clear any errors
   }
 
   function checkIfSignInFormIsValid() {
@@ -170,11 +175,11 @@ function AuthPage() {
                 )}
                 <CommonForm
                   formControls={signUpFormControls}
-                      buttonText={"Create Account"}
+                  buttonText={"Create Account"}
                   formData={signUpFormData}
                   setFormData={setSignUpFormData}
                   isButtonDisabled={!checkIfSignUpFormIsValid()}
-                  handleSubmit={handleRegisterUser}
+                  handleSubmit={(event) => handleRegisterUser(event, handleSuccessfulRegistration)}
                 />
               </CardContent>
             </Card>

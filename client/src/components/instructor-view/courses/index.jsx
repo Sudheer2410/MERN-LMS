@@ -5,7 +5,7 @@ import {
   courseLandingInitialFormData,
 } from "@/config";
 import { InstructorContext } from "@/context/instructor-context";
-import { Delete, Edit, Plus, BookOpen, Users, DollarSign, TrendingUp } from "lucide-react";
+import { Delete, Edit, Plus, BookOpen, Users, DollarSign } from "lucide-react";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
@@ -95,13 +95,6 @@ function InstructorCourses({ listOfCourses }) {
                     </div>
                     <p className="text-lg font-bold text-gray-900">${course?.pricing}</p>
                     <p className="text-xs text-gray-500">Price</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-full mx-auto mb-1">
-                      <TrendingUp className="h-4 w-4 text-purple-600" />
-                    </div>
-                    <p className="text-lg font-bold text-gray-900">${course?.students?.length * course?.pricing}</p>
-                    <p className="text-xs text-gray-500">Revenue</p>
                   </div>
                 </div>
 

@@ -11,7 +11,7 @@ const axiosInstance = axios.create({
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -35,7 +35,7 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
+        const refreshToken = sessionStorage.getItem("refreshToken");
         if (refreshToken) {
           const response = await axios.post(
             `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/auth/refresh`,
@@ -43,14 +43,14 @@ axiosInstance.interceptors.response.use(
           );
           
           if (response.data.success) {
-            localStorage.setItem("token", response.data.token);
+            sessionStorage.setItem("token", response.data.token);
             originalRequest.headers.Authorization = `Bearer ${response.data.token}`;
             return axiosInstance(originalRequest);
           }
         }
       } catch (refreshError) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("refreshToken");
         window.location.href = "/auth";
         return Promise.reject(refreshError);
       }

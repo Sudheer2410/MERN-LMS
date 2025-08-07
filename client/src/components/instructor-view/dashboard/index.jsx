@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DollarSign, Users, TrendingUp, BookOpen, Award } from "lucide-react";
+import { DollarSign, Users, BookOpen, Award } from "lucide-react";
 import PropTypes from "prop-types";
 
 function InstructorDashboard({ listOfCourses }) {
@@ -44,7 +44,6 @@ function InstructorDashboard({ listOfCourses }) {
 
   const stats = calculateTotalStudentsAndProfit();
   const totalCourses = listOfCourses.length;
-  const averageRevenue = totalCourses > 0 ? stats.totalProfit / totalCourses : 0;
 
   const config = [
     {
@@ -71,20 +70,12 @@ function InstructorDashboard({ listOfCourses }) {
       bgColor: "bg-purple-50",
       iconColor: "text-purple-600",
     },
-    {
-      icon: TrendingUp,
-      label: "Avg. Revenue/Course",
-      value: `$${averageRevenue.toLocaleString()}`,
-      color: "from-orange-500 to-orange-600",
-      bgColor: "bg-orange-50",
-      iconColor: "text-orange-600",
-    },
   ];
 
   return (
     <div className="space-y-8">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {config.map((item, index) => (
           <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -97,11 +88,6 @@ function InstructorDashboard({ listOfCourses }) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-900">{item.value}</div>
-              <div className="flex items-center space-x-1 mt-1">
-                <TrendingUp className="h-4 w-4 text-green-500" />
-                <span className="text-sm text-green-600 font-medium">+12%</span>
-                <span className="text-sm text-gray-500">from last month</span>
-              </div>
             </CardContent>
           </Card>
         ))}

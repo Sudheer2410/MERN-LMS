@@ -16,12 +16,23 @@ export default function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState("");
 
-  async function handleRegisterUser(event) {
+  async function handleRegisterUser(event, onSuccess) {
     event.preventDefault();
     setAuthError(""); // Clear previous error
     try {
-      await registerService(signUpFormData);
-      // Optionally, redirect or show success
+      const response = await registerService(signUpFormData);
+      if (response.success) {
+        // Show success message and redirect to login
+        setAuthError(""); // Clear any previous errors
+        // Reset form data
+        setSignUpFormData(initialSignUpFormData);
+        // Call success callback if provided
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          alert("Registration successful! Please sign in with your credentials.");
+        }
+      }
     } catch (error) {
       setAuthError(error?.response?.data?.message || "Registration failed");
     }
@@ -33,7 +44,7 @@ export default function AuthProvider({ children }) {
     try {
       const data = await loginService(signInFormData);
       if (data.success) {
-        localStorage.setItem("token", data.data.accessToken);
+        sessionStorage.setItem("token", data.data.accessToken);
         setAuth({
           authenticate: true,
           user: data.data.user,
@@ -53,7 +64,7 @@ export default function AuthProvider({ children }) {
   //check auth user with timeout
   async function checkAuthUser() {
     // Check if there's a stored token first
-    const storedToken = localStorage.getItem("token");
+    const storedToken = sessionStorage.getItem("token");
     
     if (!storedToken) {
       setAuth({
@@ -80,7 +91,7 @@ export default function AuthProvider({ children }) {
         });
       } else {
         // Token is invalid, remove it
-        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
         setAuth({
           authenticate: false,
           user: null,
@@ -90,7 +101,7 @@ export default function AuthProvider({ children }) {
       // Handle different types of errors
       if (error?.response?.status === 401) {
         // 401 is expected when user is not logged in - remove invalid token
-        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
         setAuth({
           authenticate: false,
           user: null,
@@ -121,7 +132,7 @@ export default function AuthProvider({ children }) {
   }
 
   function resetCredentials() {
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     setAuth({
       authenticate: false,
       user: null,
@@ -131,8 +142,6 @@ export default function AuthProvider({ children }) {
   useEffect(() => {
     checkAuthUser();
   }, []);
-
-
 
   return (
     <AuthContext.Provider
