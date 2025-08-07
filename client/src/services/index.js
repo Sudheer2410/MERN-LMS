@@ -174,3 +174,8 @@ export async function resetCourseProgressService(userId, courseId) {
 
   return data;
 }
+
+export async function enrollFreeCourseService(formData) {
+  const { data } = await axiosInstance.post(`/student/order/enroll-free-course`, formData);
+  return data;
+}

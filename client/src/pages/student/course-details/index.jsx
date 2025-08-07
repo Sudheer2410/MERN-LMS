@@ -15,6 +15,7 @@ import { StudentContext } from "@/context/student-context";
 import {
   createPaymentService,
   fetchStudentViewCourseDetailsService,
+  enrollFreeCourseService,
 } from "@/services";
 import { CheckCircle, Globe, Lock, PlayCircle } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
@@ -91,9 +92,31 @@ function StudentViewCourseDetailsPage() {
       coursePricing: studentViewCourseDetails?.pricing,
     };
 
-    console.log(paymentPayload, "paymentPayload");
-    const response = await createPaymentService(paymentPayload);
+    if (studentViewCourseDetails?.pricing === 0) {
+      // Free course enrollment
+      const enrollPayload = {
+        userId: auth?.user?._id,
+        userName: auth?.user?.userName,
+        userEmail: auth?.user?.userEmail,
+        instructorId: studentViewCourseDetails?.instructorId,
+        instructorName: studentViewCourseDetails?.instructorName,
+        courseImage: studentViewCourseDetails?.image,
+        courseTitle: studentViewCourseDetails?.title,
+        courseId: studentViewCourseDetails?._id,
+        orderDate: new Date(),
+      };
+      const response = await enrollFreeCourseService(enrollPayload);
+      if (response.success) {
+        // Redirect to course progress
+        window.location.href = `/course-progress/${studentViewCourseDetails?._id}`;
+      } else {
+        alert(response.message || 'Failed to enroll in free course.');
+      }
+      return;
+    }
 
+    // Paid course: proceed with payment
+    const response = await createPaymentService(paymentPayload);
     if (response.success) {
       sessionStorage.setItem(
         "currentOrderId",
@@ -236,7 +259,7 @@ function StudentViewCourseDetailsPage() {
                 </span>
               </div>
               <Button onClick={handleCreatePayment} className="w-full">
-                Buy Now
+                {studentViewCourseDetails?.pricing === 0 ? 'Enroll for Free' : 'Buy Now'}
               </Button>
             </CardContent>
           </Card>

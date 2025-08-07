@@ -9,29 +9,83 @@ import {
 } from "../ui/select";
 import { Textarea } from "../ui/textarea";
 import PropTypes from "prop-types";
+import { useState } from "react";
+import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 
 function FormControls({ formControls = [], formData, setFormData }) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  function getIcon(type, name) {
+    if (name.toLowerCase().includes("email")) return <Mail className="h-5 w-5 text-gray-400" />;
+    if (name.toLowerCase().includes("user")) return <User className="h-5 w-5 text-gray-400" />;
+    if (type === "password") return <Lock className="h-5 w-5 text-gray-400" />;
+    return null;
+  }
+
   function renderComponentByType(getControlItem) {
     let element = null;
     const currentControlItemValue = formData[getControlItem.name] || "";
+    const icon = getIcon(getControlItem.type, getControlItem.name);
 
     switch (getControlItem.componentType) {
       case "input":
-        element = (
-          <Input
-            id={getControlItem.name}
-            name={getControlItem.name}
-            placeholder={getControlItem.placeholder}
-            type={getControlItem.type}
-            value={currentControlItemValue}
-            onChange={(event) =>
-              setFormData({
-                ...formData,
-                [getControlItem.name]: event.target.value,
-              })
-            }
-          />
-        );
+        if (getControlItem.type === "password") {
+          element = (
+            <div className="relative">
+              <Input
+                id={getControlItem.name}
+                name={getControlItem.name}
+                placeholder={getControlItem.placeholder}
+                type={showPassword ? "text" : "password"}
+                value={currentControlItemValue}
+                onChange={(event) =>
+                  setFormData({
+                    ...formData,
+                    [getControlItem.name]: event.target.value,
+                  })
+                }
+                className="h-12 px-10 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+                autoComplete={getControlItem.name}
+              />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <Lock className="h-5 w-5 text-gray-400" />
+              </span>
+              <button
+                type="button"
+                tabIndex={-1}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 focus:outline-none"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+          );
+        } else {
+          element = (
+            <div className="relative">
+              <Input
+                id={getControlItem.name}
+                name={getControlItem.name}
+                placeholder={getControlItem.placeholder}
+                type={getControlItem.type}
+                value={currentControlItemValue}
+                onChange={(event) =>
+                  setFormData({
+                    ...formData,
+                    [getControlItem.name]: event.target.value,
+                  })
+                }
+                className="h-12 px-10 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+                autoComplete={getControlItem.name}
+              />
+              {icon && (
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  {icon}
+                </span>
+              )}
+            </div>
+          );
+        }
         break;
       case "select":
         element = (
@@ -44,7 +98,7 @@ function FormControls({ formControls = [], formData, setFormData }) {
             }
             value={currentControlItemValue}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full h-12 px-4 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md">
               <SelectValue placeholder={getControlItem.label} />
             </SelectTrigger>
             <SelectContent>
@@ -72,6 +126,7 @@ function FormControls({ formControls = [], formData, setFormData }) {
                 [getControlItem.name]: event.target.value,
               })
             }
+            className="min-h-[80px] px-4 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
           />
         );
         break;
@@ -90,6 +145,8 @@ function FormControls({ formControls = [], formData, setFormData }) {
                 [getControlItem.name]: event.target.value,
               })
             }
+            className="h-12 px-10 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+            autoComplete={getControlItem.name}
           />
         );
         break;
@@ -99,10 +156,15 @@ function FormControls({ formControls = [], formData, setFormData }) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="space-y-5">
       {formControls.map((controleItem) => (
-        <div key={controleItem.name}>
-          <Label htmlFor={controleItem.name}>{controleItem.label}</Label>
+        <div key={controleItem.name} className="space-y-2">
+          <Label 
+            htmlFor={controleItem.name}
+            className="text-sm font-medium text-gray-700"
+          >
+            {controleItem.label}
+          </Label>
           {renderComponentByType(controleItem)}
         </div>
       ))}

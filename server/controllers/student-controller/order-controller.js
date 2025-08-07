@@ -23,6 +23,14 @@ const createOrder = async (req, res) => {
       coursePricing,
     } = req.body;
 
+    // Validate coursePricing
+    if (typeof coursePricing !== 'number' || isNaN(coursePricing) || coursePricing <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid coursePricing. Must be a positive number.'
+      });
+    }
+
     const create_payment_json = {
       intent: "sale",
       payer: {
@@ -39,7 +47,7 @@ const createOrder = async (req, res) => {
               {
                 name: courseTitle,
                 sku: courseId,
-                price: coursePricing,
+                price: coursePricing.toFixed(2),
                 currency: "USD",
                 quantity: 1,
               },
@@ -54,12 +62,16 @@ const createOrder = async (req, res) => {
       ],
     };
 
+    // Log the payment JSON for debugging
+    console.log('PayPal create_payment_json:', JSON.stringify(create_payment_json, null, 2));
+
     paypal.payment.create(create_payment_json, async (error, paymentInfo) => {
       if (error) {
-        console.log(error);
+        console.error('PayPal error:', JSON.stringify(error, null, 2));
         return res.status(500).json({
           success: false,
           message: "Error while creating paypal payment!",
+          details: error.response?.details || error.message,
         });
       } else {
         const newlyCreatedCourseOrder = new Order({
@@ -184,4 +196,67 @@ const capturePaymentAndFinalizeOrder = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, capturePaymentAndFinalizeOrder };
+const enrollFreeCourseHandler = async (req, res) => {
+  try {
+    const {
+      userId,
+      userName,
+      userEmail,
+      instructorId,
+      instructorName,
+      courseImage,
+      courseTitle,
+      courseId,
+      orderDate
+    } = req.body;
+
+    // Add to StudentCourses
+    let studentCourses = await StudentCourses.findOne({ userId });
+    if (studentCourses) {
+      // Prevent duplicate enrollment
+      if (!studentCourses.courses.some(c => c.courseId === courseId)) {
+        studentCourses.courses.push({
+          courseId,
+          title: courseTitle,
+          instructorId,
+          instructorName,
+          dateOfPurchase: orderDate || new Date(),
+          courseImage,
+        });
+        await studentCourses.save();
+      }
+    } else {
+      studentCourses = new StudentCourses({
+        userId,
+        courses: [{
+          courseId,
+          title: courseTitle,
+          instructorId,
+          instructorName,
+          dateOfPurchase: orderDate || new Date(),
+          courseImage,
+        }]
+      });
+      await studentCourses.save();
+    }
+
+    // Add to Course.students
+    await Course.findByIdAndUpdate(courseId, {
+      $addToSet: {
+        students: {
+          studentId: userId,
+          studentName: userName,
+          studentEmail: userEmail,
+          paidAmount: 0,
+        },
+      },
+    });
+
+    res.status(200).json({ success: true, message: 'Enrolled in free course!' });
+  } catch (err) {
+    console.error('Error enrolling in free course:', err);
+    res.status(500).json({ success: false, message: 'Failed to enroll in free course.' });
+  }
+};
+
+module.exports = { createOrder, capturePaymentAndFinalizeOrder, enrollFreeCourse: enrollFreeCourseHandler };
